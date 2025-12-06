@@ -5,7 +5,7 @@
 
 This repository provides configuration and instructions for using the **Armer Argent One** audio interface with **FlexASIO** (universal ASIO driver) and **RS_ASIO** (Rocksmith 2014 patch to enable ASIO).
 
-The goal of this setup is to allow the use of the Argent One interface with low latency in Rocksmith 2014, correcting common channel mismatch errors.
+The goal of this setup is to allow the use of the Argent One interface with low latency in Rocksmith 2014, correcting common channel mismatch errors, while allowing other apps (YouTube, Discord) to work simultaneously.
 
 * [RS_ASIO](https://github.com/mdias/rs_asio)
 * [FlexASIO](https://github.com/dechamps/FlexASIO)
@@ -53,7 +53,7 @@ The Argent One presents itself to Windows as a **2-channel Stereo device**. Rock
 ### 1. FlexASIO.toml
 *Place this file in your User folder (e.g., `C:\Users\YOUR_NAME\FlexASIO.toml`)*
 
-**Important:** We set `channels = 2` to match the Windows Default Format. Setting this to 1 usually causes `AUDCLNT_E_UNSUPPORTED_FORMAT` errors with this interface.
+**Important:** We set `channels = 2` to match the Windows Default Format. Exclusive mode is disabled to allow multitasking.
 
 ```toml
 backend = "Windows WASAPI"
@@ -63,17 +63,16 @@ bufferSizeSamples = 512
 device = "Microfone (Armer Argent)"
 # Must be 2 to match Windows Stereo default
 channels = 2
-# Set to 'true' for lowest latency (Game Only). 
-# Set to 'false' to allow YouTube/Spotify to play in background (Higher Latency).
-wasapiExclusiveMode = true
-wasapiAutoConvert = false
+# 'false' allows other apps (YouTube/Discord) to play audio simultaneously
+wasapiExclusiveMode = false
+wasapiAutoConvert = true
 
 [output]
 device = "Fones de ouvido (Armer Argent)"
 # Must be 2 to match Windows Stereo default
 channels = 2
-wasapiExclusiveMode = true
-wasapiAutoConvert = false
+wasapiExclusiveMode = false
+wasapiAutoConvert = true
 ````
 
 ### 2\. RS\_ASIO.ini
@@ -159,7 +158,7 @@ EnableSoftwareMasterVolumeControl=1
   * **Low Latency:** Try changing `bufferSizeSamples` in the TOML file to `256` or `192`.
       * If audio crackles, increase the number.
       * If audio is delayed, decrease the number.
-  * **Exclusive Mode:** The provided config uses `wasapiExclusiveMode = true` for best performance. If you need to watch YouTube or use Discord while playing, change this to `false` in `FlexASIO.toml` (this may increase latency).
+  * **Exclusive Mode:** The provided config uses `wasapiExclusiveMode = false` to allow background audio (YouTube/Discord). If you experience high latency, change this to `true` in `FlexASIO.toml` (this will mute background apps).
 
 -----
 
@@ -171,7 +170,7 @@ EnableSoftwareMasterVolumeControl=1
 | **Error: Unsupported Format** | Channel mismatch | Ensure `channels = 2` in TOML and Windows format is 48kHz Stereo. |
 | **No Guitar Sound** | Wrong Input Channel | Check `RS_ASIO.ini`. Argent One Inst input is usually Channel 1 (Right). |
 | **Audio Crackling** | Buffer too low | Increase `bufferSizeSamples` to 512 or 1024. |
-| **YouTube video pauses** | Exclusive Mode conflict | Set `wasapiExclusiveMode = false` in TOML. |
+| **YouTube video pauses** | Exclusive Mode conflict | Ensure `wasapiExclusiveMode = false` in TOML. |
 
 -----
 
@@ -213,5 +212,3 @@ EnableSoftwareMasterVolumeControl=1
   * **FlexASIO** by dechamps
   * **RSMods** by Lovrom8
   * **Armer Argent One** Hardware info based on official manual.
-
-<!-- end list -->
