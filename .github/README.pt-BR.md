@@ -1,4 +1,4 @@
-[![English](https://img.shields.io/badge/lang-English-informational)](../README.md)
+[![English](https://img.shields.io/badge/lang-English-informational)](./README.md)
 [![Português (BR)](https://img.shields.io/badge/idioma-Portugu%C3%AAs%20(BR)-blue)](./README.pt-BR.md)
 
 # Configuração Armer Argent One + FlexASIO + RS_ASIO
