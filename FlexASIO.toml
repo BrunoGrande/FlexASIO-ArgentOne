@@ -1,11 +1,14 @@
 backend = "Windows WASAPI"
-bufferSizeSamples = 96
+bufferSizeSamples = 480
+
 [input]
-device = "Microfone (2- Armer Argent)"
+device = "Microfone (Armer Argent)"
 wasapiExclusiveMode = false
-wasapiAutoConvert = true
-channels = 1
+wasapiAutoConvert = false
+channels = 2
+
 [output]
-device = "Fones de ouvido (2- Armer Argent)"
+device = "Fones de ouvido (Armer Argent)"
 wasapiExclusiveMode = false
-wasapiAutoConvert = true
+wasapiAutoConvert = false
+channels = 2
