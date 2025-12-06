@@ -5,7 +5,7 @@
 
 Este repositório fornece a configuração e as instruções para usar a interface de áudio **Armer Argent One** com o **FlexASIO** (driver ASIO universal) e o **RS_ASIO** (patch do Rocksmith 2014 para habilitar ASIO).
 
-O objetivo desta configuração é permitir o uso da interface Argent One com baixa latência no Rocksmith 2014, corrigindo erros comuns de incompatibilidade de canais.
+O objetivo desta configuração é permitir o uso da interface Argent One com baixa latência no Rocksmith 2014, corrigindo erros comuns de incompatibilidade de canais, permitindo também o uso simultâneo de outros softwares (YouTube, Discord).
 
 * [RS_ASIO](https://github.com/mdias/rs_asio)
 * [FlexASIO](https://github.com/dechamps/FlexASIO)
@@ -53,7 +53,7 @@ A Argent One se apresenta ao Windows como um **dispositivo Estéreo de 2 canais*
 ### 1. FlexASIO.toml
 *Coloque este arquivo na sua pasta de Usuário (ex: `C:\Usuários\SEU_NOME\FlexASIO.toml`)*
 
-**Importante:** Definimos `channels = 2` para corresponder ao Formato Padrão do Windows. Definir isso como 1 geralmente causa erros `AUDCLNT_E_UNSUPPORTED_FORMAT` com esta interface.
+**Importante:** Definimos `channels = 2` para corresponder ao Formato Padrão do Windows. O modo exclusivo está desligado para permitir multitarefa.
 
 ```toml
 backend = "Windows WASAPI"
@@ -63,17 +63,16 @@ bufferSizeSamples = 512
 device = "Microfone (Armer Argent)"
 # Deve ser 2 para corresponder ao padrão Estéreo do Windows
 channels = 2
-# Defina como 'true' para menor latência (Apenas o Jogo terá som). 
-# Defina como 'false' para permitir YouTube/Spotify ao fundo (Aumenta a latência).
-wasapiExclusiveMode = true
-wasapiAutoConvert = false
+# 'false' permite que outros apps (YouTube/Discord) toquem áudio simultaneamente
+wasapiExclusiveMode = false
+wasapiAutoConvert = true
 
 [output]
 device = "Fones de ouvido (Armer Argent)"
 # Deve ser 2 para corresponder ao padrão Estéreo do Windows
 channels = 2
-wasapiExclusiveMode = true
-wasapiAutoConvert = false
+wasapiExclusiveMode = false
+wasapiAutoConvert = true
 ````
 
 ### 2\. RS\_ASIO.ini
@@ -159,7 +158,7 @@ EnableSoftwareMasterVolumeControl=1
   * **Baixa Latência:** Tente alterar `bufferSizeSamples` no arquivo TOML para `256` ou `192`.
       * Se o áudio estalar/pipocar, aumente o número.
       * Se o áudio estiver atrasado, diminua o número.
-  * **Modo Exclusivo:** A configuração fornecida usa `wasapiExclusiveMode = true` para melhor desempenho. Se você precisar assistir ao YouTube ou usar o Discord enquanto toca, altere para `false` no `FlexASIO.toml` (isso pode aumentar a latência).
+  * **Modo Exclusivo:** Se você sentir muita latência, pode alterar `wasapiExclusiveMode` para `true` no `FlexASIO.toml`, mas perderá o áudio do YouTube/Discord enquanto joga.
 
 -----
 
