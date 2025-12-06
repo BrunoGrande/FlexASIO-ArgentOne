@@ -1,247 +1,215 @@
-[![English](https://img.shields.io/badge/lang-English-informational)](./README.md)
+[![English](https://img.shields.io/badge/lang-English-informational)](../README.md)
 [![Português (BR)](https://img.shields.io/badge/idioma-Portugu%C3%AAs%20(BR)-blue)](./README.pt-BR.md)
 
-Configuração do Argent One + FlexASIO + RS_ASIO
+# Configuração Armer Argent One + FlexASIO + RS_ASIO
 
-Este repositório fornece configuração e instruções para usar a interface de áudio **Armer Argent One** com **FlexASIO** (driver ASIO universal) e **RS_ASIO** (patch Rocksmith 2014 para habilitar ASIO). A configuração permite executar Guitar Rig, Rocksmith e áudio padrão do Windows (YouTube, Discord, etc.) simultaneamente sem conflitos.
+Este repositório fornece a configuração e as instruções para usar a interface de áudio **Armer Argent One** com o **FlexASIO** (driver ASIO universal) e o **RS_ASIO** (patch do Rocksmith 2014 para habilitar ASIO).
+
+O objetivo desta configuração é permitir o uso da interface Argent One com baixa latência no Rocksmith 2014, corrigindo erros comuns de incompatibilidade de canais.
 
 * [RS_ASIO](https://github.com/mdias/rs_asio)
 * [FlexASIO](https://github.com/dechamps/FlexASIO)
-* [FlexASIO GUI](https://github.com/flipswitchingmonkey/FlexASIO_GUI)
+* [RSMods](https://github.com/Lovrom8/RSMods) (Necessário para o Fast Load)
+* [FlexASIO GUI](https://github.com/flipswitchingmonkey/FlexASIO_GUI) (Opcional)
 
 ---
 
 ## Índice
 
-1. [Visão geral](#visão-geral)
+1. [Visão Geral](#visão-geral)
 2. [Pré-requisitos](#pré-requisitos)
-3. [Arquivos de configuração incluídos](#arquivos-de-configuração-incluídos)
-4. [Instruções de configuração](#instruções-de-configuração)
-5. [Teste e ajuste de latência](#teste-e-ajuste-de-latência)
-6. [Streaming e bypass ASIO](#streaming-e-bypass-asio)
-7. [Solução de problemas](#solução-de-problemas)
-8. [Detalhes do hardware Argent One](#detalhes-do-hardware-argent-one)
-9. [Créditos e referências](#créditos-e-referências)
+3. [Arquivos de Configuração Inclusos](#arquivos-de-configuração-inclusos)
+4. [Instruções de Instalação](#instruções-de-instalação)
+5. [Testes e Ajuste de Latência](#testes-e-ajuste-de-latência)
+6. [Resolução de Problemas (Troubleshooting)](#resolução-de-problemas-troubleshooting)
+7. [Detalhes de Hardware da Argent One](#detalhes-de-hardware-da-argent-one)
+8. [Créditos e Referências](#créditos-e-referências)
 
 ---
 
-## Visão geral
+## Visão Geral
 
-* **Argent One** é uma interface de áudio da Armer.
-* **FlexASIO** funciona como um driver ASIO universal, fazendo a ponte entre hosts ASIO e backends de áudio do Windows (WASAPI, etc.), permitindo que vários aplicativos compartilhem a mesma interface.
-* **RS_ASIO** injeta suporte ASIO no **Rocksmith 2014**, substituindo ou aumentando seu tratamento de áudio WASAPI.
+* **Argent One** é uma interface de áudio de 2 canais da Armer.
+* **FlexASIO** faz a ponte entre hosts ASIO e o sistema de áudio do Windows (WASAPI).
+* **RS_ASIO** injeta suporte ASIO no **Rocksmith 2014**.
 
-Com essa configuração, é possível:
-
-* Usar o Guitar Rig (ou outros simuladores VST/amp) via ASIO através do FlexASIO
-* Jogar Rocksmith com ASIO (via RS_ASIO)
-* Permitir que o áudio do Windows (por exemplo, navegador, sons do sistema) coexista com aplicativos ASIO
+**Por que esta configuração específica?**
+A Argent One se apresenta ao Windows como um **dispositivo Estéreo de 2 canais**. O Rocksmith requer uma entrada Mono específica. Esta configuração força o FlexASIO a corresponder ao formato estéreo do Windows (evitando falhas e erros de formato) e usa o RS_ASIO para rotear o canal físico correto (Esquerdo ou Direito) para as funções do jogo.
 
 ---
 
 ## Pré-requisitos
 
-* PC com Windows
-* Interface **Armer Argent One**, instalada e funcional
-* **FlexASIO** instalado
-* **FlexASIO GUI** (opcional, mas útil)
-* **RS_ASIO** aplicado ao Rocksmith 2014
-* Capacidade de editar arquivos `.toml` e `.ini`
-* .NET Desktop Runtime 6.x instalado (para a GUI)
+* PC com Windows.
+* Interface **Armer Argent One**, instalada e funcionando.
+* **FlexASIO** instalado (versão mais recente).
+* Arquivos do **RS_ASIO** copiados para a pasta do Rocksmith.
+* **RSMods** instalado (Crucial para pular os vídeos de introdução e evitar travamentos de "tela branca").
 
 ---
 
-## Arquivos de configuração incluídos
+## Arquivos de Configuração Inclusos
 
-* `FlexASIO.toml` - Configuração do FlexASIO
-* `RS_ASIO.ini` - Configuração do RS_ASIO
+### 1. FlexASIO.toml
+*Coloque este arquivo na sua pasta de Usuário (ex: `C:\Usuários\SEU_NOME\FlexASIO.toml`)*
 
-### FlexASIO.toml
+**Importante:** Definimos `channels = 2` para corresponder ao Formato Padrão do Windows. Definir isso como 1 geralmente causa erros `AUDCLNT_E_UNSUPPORTED_FORMAT` com esta interface.
 
 ```toml
 backend = "Windows WASAPI"
-# sampleRate = 48000     # A GUI pode travar se não for comentada
 bufferSizeSamples = 512
 
 [input]
-device = "Microfone (2- Armer Argent)"
-channels = 1
-wasapiExclusiveMode = false
-wasapiAutoConvert = true
+device = "Microfone (Armer Argent)"
+# Deve ser 2 para corresponder ao padrão Estéreo do Windows
+channels = 2
+# Defina como 'true' para menor latência (Apenas o Jogo terá som). 
+# Defina como 'false' para permitir YouTube/Spotify ao fundo (Aumenta a latência).
+wasapiExclusiveMode = true
+wasapiAutoConvert = false
 
 [output]
-device = "Fones de ouvido (2- Armer Argent)"
-wasapiExclusiveMode = false
-wasapiAutoConvert = true
-```
+device = "Fones de ouvido (Armer Argent)"
+# Deve ser 2 para corresponder ao padrão Estéreo do Windows
+channels = 2
+wasapiExclusiveMode = true
+wasapiAutoConvert = false
+````
 
-> A GUI do FlexASIO **não** suporta o campo `sampleRate`. Deixe-o comentado ou remova-o completamente.
+### 2\. RS\_ASIO.ini
 
-### RS_ASIO.ini
+*Coloque este arquivo na pasta raiz do seu Rocksmith.*
+
+Esta configuração mapeia as entradas físicas específicas da Argent One:
+
+  * **Input 0 (Esquerda/Mic)** -\> Mapeado para o Microfone do Rocksmith.
+  * **Input 1 (Direita/Inst)** -\> Mapeado para o Cabo da Guitarra do Rocksmith.
+
+<!-- end list -->
 
 ```ini
 [Config]
-EnableWasapiOutputs = 0
-EnableWasapiInputs = 0
-EnableAsio = 1
+EnableWasapiOutputs=0
+EnableWasapiInputs=0
+EnableAsio=1
 
 [Asio]
-BufferSizeMode = driver
+BufferSizeMode=driver
+CustomBufferSize=
 
 [Asio.Output]
-Driver = FlexASIO
-BaseChannel = 0
-EnableSoftwareEndpointVolumeControl = 0
-EnableSoftwareMasterVolumeControl = 0
+Driver=FlexASIO
+BaseChannel=0
+EnableSoftwareEndpointVolumeControl=1
+EnableSoftwareMasterVolumeControl=1
 
 [Asio.Input.0]
-Driver = FlexASIO
-Channel = 0
-EnableSoftwareEndpointVolumeControl = 0
-EnableSoftwareMasterVolumeControl = 0
+; Esta é a GUITARRA (Player 1)
+; Usamos Channel=1 porque a Entrada 2 (Inst) da Argent One é o canal Direito
+Driver=FlexASIO
+Channel=1
+EnableSoftwareEndpointVolumeControl=1
+EnableSoftwareMasterVolumeControl=1
 
-[Asio.Input.1]
-Driver =
-Canal =
-EnableSoftwareEndpointVolumeControl = 0
-EnableSoftwareMasterVolumeControl = 0
+[Asio.Input.Mic]
+; Este é o MICROFONE VOCAL
+; Usamos Channel=0 porque a Entrada 1 (Mic) da Argent One é o canal Esquerdo
+Driver=FlexASIO
+Channel=0
+EnableSoftwareEndpointVolumeControl=1
+EnableSoftwareMasterVolumeControl=1
 ```
 
----
+-----
 
-## Instruções de configuração
+## Instruções de Instalação
 
-1. **Instale o FlexASIO**
-   Faça o download a partir dos [lançamentos oficiais](https://github.com/dechamps/FlexASIO/releases/).
-   Execute o instalador para que o `FlexASIO.dll` e os arquivos relacionados sejam instalados.
+1.  **Configurações de Som do Windows**
 
-2. **Instale o RS_ASIO**
-   Faça o download nas [versões do RS_ASIO](https://github.com/mdias/rs_asio/releases/).
-   Copie o `RS_ASIO.dll`, o `RS_ASIO.ini` e os arquivos relacionados para a pasta do jogo Rocksmith.
+      * Abra o `mmsys.cpl` (Painel de Controle de Som).
+      * Defina a Argent One como dispositivo Padrão de Reprodução e Gravação.
+      * **Crucial:** Em Propriedades \> Avançado, certifique-se de que ambos estejam definidos para **2 canais, 16 bits (ou 24 bits), 48000 Hz**.
 
-3. **Coloque os arquivos de configuração**
+2.  **Instalar FlexASIO**
 
-* Copie o `FlexASIO.toml` para o diretório do perfil do usuário (por exemplo, `C:\Users\<SeuNome>\FlexASIO.toml`)
-* Substitua o `RS_ASIO.ini` na pasta Rocksmith pelo arquivo deste repositório
+      * Baixe e instale a versão mais recente.
 
-4. **Configure o áudio do Windows**
+3.  **Instalar RS\_ASIO**
 
-   * Defina o Argent One como o dispositivo padrão de reprodução e captura
-   * Selecione 48 kHz nas propriedades do dispositivo. Essa é a taxa recomendada para o Rocksmith; outros aplicativos podem usar taxas de amostragem diferentes, se necessário
-   * Desative os aprimoramentos de áudio e o controle exclusivo
+      * Copie `RS_ASIO.dll`, `RS_ASIO.ini` (conteúdo acima) e `avrt.dll` para a pasta do Rocksmith.
 
-5. **Inicie a GUI do FlexASIO (opcional)**
+4.  **Configurar FlexASIO**
 
-   * Certifique-se de que `sampleRate` esteja comentado ou removido para evitar falhas
-   * Use a GUI para confirmar a seleção do dispositivo e o tamanho do buffer
+      * Crie o arquivo `FlexASIO.toml` com o conteúdo acima na sua pasta de usuário (`C:\Usuários\SEU_NOME\`).
 
-6. **Inicie o Rocksmith**
+5.  **Instalar RSMods (Corrigir Inicialização Lenta)**
 
-   * O RS_ASIO se conectará ao jogo, detectará o FlexASIO e usará a configuração fornecida
+      * O Rocksmith possui vídeos de introdução que não podem ser pulados nativamente. Com drivers ASIO personalizados, isso muitas vezes parece que o jogo travou (tela branca por \~20 segundos).
+      * Instale o **RSMods**, vá para a aba "Set and Forget" e habilite o **Fast Load**. Isso remove a introdução e torna a inicialização instantânea.
 
-7. **Inicie o Guitar Rig / outros aplicativos ASIO**
+6.  **Iniciar e Jogar**
 
-   * Selecione `FlexASIO` como o driver ASIO
-   * Ambos os aplicativos compartilharão a interface Argent One
+      * Abra o Rocksmith. O jogo deve iniciar instantaneamente e o áudio deve funcionar tanto para a Guitarra quanto para o Microfone.
 
-8. **Toque e monitore**
-   O áudio da guitarra, do jogo e do sistema agora devem funcionar simultaneamente.
+-----
 
----
+## Testes e Ajuste de Latência
 
-## Teste e ajuste de latência
+  * **Buffer Padrão:** `512` amostras (Equilíbrio seguro).
+  * **Baixa Latência:** Tente alterar `bufferSizeSamples` no arquivo TOML para `256` ou `192`.
+      * Se o áudio estalar/pipocar, aumente o número.
+      * Se o áudio estiver atrasado, diminua o número.
+  * **Modo Exclusivo:** A configuração fornecida usa `wasapiExclusiveMode = true` para melhor desempenho. Se você precisar assistir ao YouTube ou usar o Discord enquanto toca, altere para `false` no `FlexASIO.toml` (isso pode aumentar a latência).
 
-* Comece com `bufferSizeSamples = 512` (equilibrado)
-* Se ocorrerem estalos/pops, aumente para `1024` ou mais
-* Para uma latência mais baixa, experimente com `256` ou `128`
-* Revise `RS_ASIO-log.txt` para verificar as configurações do buffer e verificar se há xruns
-* Monitore a latência da CPU/DPC com ferramentas como LatencyMon
-* Certifique-se de que todos os dispositivos estejam configurados em 48 kHz para evitar sobrecarga de reamostragem
+-----
 
----
+## Resolução de Problemas (Troubleshooting)
 
-## Streaming e bypass ASIO
+| Sintoma | Causa Provável | Solução Sugerida |
+| :--- | :--- | :--- |
+| **Jogo trava em tela branca** | Vídeos de intro rodando invisíveis | Instale o **RSMods** e ative o "Fast Load". |
+| **Erro: Unsupported Format** | Incompatibilidade de canais | Garanta `channels = 2` no TOML e formato do Windows em 48kHz Estéreo. |
+| **Sem som na Guitarra** | Canal de entrada errado | Verifique o `RS_ASIO.ini`. A entrada Inst da Argent One geralmente é o Canal 1 (Direita). |
+| **Áudio estalando/pipocando** | Buffer muito baixo | Aumente `bufferSizeSamples` para 512 ou 1024. |
+| **Vídeo do YouTube pausa** | Conflito de Modo Exclusivo | Defina `wasapiExclusiveMode = false` no TOML. |
 
-Quando o RS_ASIO lida com a saída de áudio do Rocksmith através do ASIO, a pilha de áudio do Windows é ignorada. Isso impede a captura por software de streaming/gravação. As opções incluem:
+-----
 
-* Usar a saída WASAPI no RS_ASIO (em vez do ASIO) para que o áudio do jogo passe pelo mixer do Windows
-* Empregar ferramentas de roteamento de áudio virtual (por exemplo, VB-Audio Cable, VoiceMeeter)
-* Para configurações simples de streaming, habilitar a saída WASAPI é a solução mais direta
+## Detalhes de Hardware da Argent One
 
----
+  * [Página do Produto](https://armer.com.br/produtos/interface-de-audio-usb-armer-argent-one/)
+  * [Manual Oficial (PDF)](https://drive.google.com/file/d/15iVYalthiWtdguu4y76YLcfhcIaOtVLd/view?usp=sharing)
 
-## Solução de problemas
+### Principais Características
 
-| Sintoma                     | Causa provável                                        | Correção sugerida                                           |
-| ----------------------------| ------------------------------------------------------| ------------------------------------------------------------|
-| A GUI trava ao iniciar      | `sampleRate` presente no TOML                         | Remova ou comente `sampleRate`                      	       |
-| Rocksmith sem som           | incompatibilidade ou configuração incorreta do driver | Verifique `RS_ASIO-log.txt` e verifique `Driver = FlexASIO` |
-| Estalos/falhas              | buffer muito pequeno, problemas com USB/alimentação   | Aumente o buffer, desative a economia de energia USB        |
-| Latência muito alta         | Buffer muito grande                                   | Reduza o buffer gradualmente                                |
-| Sem áudio do jogo no stream | ASIO ignorando o Windows                              | Habilite a saída WASAPI ou use o roteamento de áudio virtual|
-| GUI não mostra dispositivos | Dispositivo desativado nas configurações do Windows   | Habilite o dispositivo nas configurações de som do Windows  |
+  * Duas entradas combo (XLR / P10 TRS).
+  * \+48V Phantom Power (Canal 1).
+  * Canal 2 alternável entre **Instrumento (INST)** e **Linha**.
 
----
+### Notas Importantes de Comportamento
 
-## Detalhes do hardware Argent One
+**A) Mic (Ch1) - Canal Esquerdo**
 
-* [Página do produto](https://armer.com.br/produtos/interface-de-audio-usb-armer-argent-one/)
-* [Manual oficial (PDF)](https://drive.google.com/file/d/15iVYalthiWtdguu4y76YLcfhcIaOtVLd/view?usp=sharing)
+  * Tipo de conector: **XLR de 3 pinos**.
+  * \+48 V Phantom Power disponível.
+  * No Mix Estéreo do Windows, este aparece como o lado **Esquerdo** (Canal 0 no ASIO).
 
-### Principais recursos
+**B) Instrumento (Ch2) - Canal Direito**
 
-* Duas entradas combinadas (XLR / TRS de 1/4").
-* Phantom Power de +48 V para microfones condensadores (Canal 1).
-* Canal 2 selecionável entre **Instrumento (INST)** e **Linha**.
-* Interruptor de monitoramento direto (MON) para monitoramento sem latência.
-* Saídas TRS balanceadas para monitores de estúdio.
-* Saída dedicada para fones de ouvido com controle de ganho próprio.
+  * Tipo de conector: **P10 TS (Cabo de Guitarra)**.
+  * **Ative o botão INST** para Guitarras/Baixo (Alta Impedância/Hi-Z).
+  * No Mix Estéreo do Windows, este aparece como o lado **Direito** (Canal 1 no ASIO).
 
-### Observações importantes sobre o comportamento
+**C) Monitoramento (Direct Monitor)**
 
-**A) Apenas microfone (Canal 1)**
+  * **Direct Monitor ON:** Você ouve as entradas diretamente (Latência Zero). Bom para checar o sinal, mas você pode ouvir o som "seco" da guitarra misturado com o amplificador do jogo.
+  * **Direct Monitor OFF:** Você ouve apenas o áudio processado do PC (Jogo/DAW). Recomendado para o Rocksmith.
 
-* Funciona como uma entrada de microfone mono.
-* Tipo de conector: **XLR de 3 pinos, mono balanceado**. Balanceado aqui significa que ele transporta o mesmo sinal mono em dois fios com polaridade oposta para cancelar o ruído, não que seja estéreo. Os novos usuários costumam confundir "balanceado" com "estéreo".
-* A Phantom Power de +48 V pode ser ativada se você estiver usando um microfone condensador.
-* Com o **Monitor Direto ativado**, você ouvirá o microfone em mono com latência zero. Se o monitoramento DAW também estiver ativado, você poderá ouvir um eco devido ao sinal duplicado atrasado.
+-----
 
-**B) Instrumento (Ch2) com INST ON**
+## Créditos e Referências
 
-* Entrada não balanceada de alta impedância (Hi-Z) para guitarra, baixo, etc.
-* Tipo de conector: **1/4" TS (2 pólos), mono não balanceado**. Os cabos TS transportam um sinal mono, não estéreo. Os novos usuários costumam confundir TS com conectores estéreo, mas ele transporta apenas um único canal.
-* Tratado como uma fonte mono.
-* **Monitor direto ativado** reproduz em mono instantaneamente; desative o monitoramento DAW para evitar ouvir duas vezes.
-
-**C) Fonte de nível de linha (Ch2 com INST desativado)**
-
-* Entrada TRS mono balanceada, projetada para teclados, sintetizadores ou saídas de mixer.
-* Tipo de conector: **TRS de 1/4" (3 pólos), mono balanceado**. Balanceado significa que o mesmo sinal mono é transportado em dois condutores com polaridade oposta para rejeitar ruídos. Não é estéreo - novos usuários costumam confundir TRS balanceado com TRS estéreo.
-* Funciona como uma fonte mono.
-* **Monitor direto ativado** reproduz em mono com latência zero.
-
-**D) Microfone (Canal 1) + Instrumento/Linha (Canal 2) simultaneamente**
-
-* **Observação manual:** se as entradas de microfone e instrumento forem usadas ao mesmo tempo, **ambas as entradas estarão em mono**.
-* **Monitor direto ativado:** o sinal monitorado é uma **mixagem mono** de ambas as entradas com latência zero.
-* **Monitor direto desligado:** você só ouve o que o DAW retorna.
-* **Gravação no DAW:** o manual não confirma explicitamente se o computador os recebe como canais separados ou como um feed mono somado. Na prática, a maioria das interfaces 2x2 compatíveis com a classe ainda apresentam **Entrada 1** e **Entrada 2** separadamente; verifique a lista de entradas do seu DAW para confirmar.
-
-**Saída de fone de ouvido e contexto de monitoramento direto**
-
-* O conector de fone de ouvido suporta TRS estéreo padrão; fones de ouvido de 4 pólos podem não funcionar corretamente.
-* O monitor direto afeta o que você ouve nos fones de ouvido e nas saídas de linha: ele ignora o computador e mixa as entradas diretamente nas saídas, sempre em mono.
-
-**Phantom Power**
-
-* Fornece 48 V apenas para o Canal 1. Use com microfones condensadores que exijam isso.
-* Desative a Phantom Power quando não estiver em uso para evitar ruídos indesejados ou possíveis danos aos microfones dinâmicos/de fita.
-
----
-
-## Créditos e referências
-
-* **RS_ASIO** - patch para suporte ASIO do Rocksmith 2014
-* **FlexASIO** - driver ASIO universal usando PortAudio e backends de áudio do Windows
-* **FlexASIO GUI** - GUI auxiliar para editar `FlexASIO.toml`
-* **Armer Argent One** - detalhes de hardware com base no [manual oficial] e nas especificações do fabricante
+  * **RS\_ASIO** por mdias
+  * **FlexASIO** por dechamps
+  * **RSMods** por Lovrom8
+  * **Armer Argent One** Informações de hardware baseadas no manual oficial.
